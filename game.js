@@ -111,7 +111,7 @@ function playAnotherGame() {
 }
 
 function playAction2D() {
-    window.location.href = 'action2d.html';
+    window.location.href = 'action3d.html';
 }
 
 function goHome() {
@@ -451,7 +451,7 @@ function createCheckpoint(x, y, z, checkpointNum, stageName) {
     numberBox.userData = { type: 'checkpointNumber' };
     scene.add(numberBox);
     checkpoints.push(numberBox);
-    
+
     // Add progress indicator for impossible obby
     if (gameMode === 'impossible') {
         const progressText = new THREE.Mesh(
@@ -605,10 +605,10 @@ function createImpossibleObby() {
     createPlatform(20, 8, 0, 1.3, 1, 1.3, 0x0066ff);
     createPlatform(24, 10, 0, 1.5, 1, 1.5, 0x0066ff);
     createPlatform(28, 12, 0, 1.8, 1, 1.8, 0x0066ff);
-    
+
     // Add safety platform halfway
     createPlatform(18, 4, -3, 2, 1, 2, 0x888888); // Safety platform
-    
+
     // Add kill parts below
     createKillPart(8, -5, 0, 25, 1, 15);
 
@@ -617,16 +617,16 @@ function createImpossibleObby() {
     // Section 2: Moving platform chaos
     createPlatform(40, 16, 0, 3, 1, 3, 0xff6600);
     createMovingObstacle(40, 18, 0, 2, 2, 2);
-    
+
     createPlatform(48, 18, 5, 3, 1, 3, 0xff6600);
     createMovingObstacle(48, 20, 5, 2, 2, 2);
-    
+
     createPlatform(56, 20, -5, 3, 1, 3, 0xff6600);
     createMovingObstacle(56, 22, -5, 2, 2, 2);
-    
+
     createPlatform(64, 22, 0, 3, 1, 3, 0xff6600);
     createMovingObstacle(64, 24, 0, 2, 2, 2);
-    
+
     // Kill parts below moving platforms
     createKillPart(40, 15, 0, 30, 1, 15);
 
@@ -637,14 +637,14 @@ function createImpossibleObby() {
     createSpinningObstacle(80, 29, 0, 1, 6, 1);
     createSpinningObstacle(82, 29, 2, 1, 6, 1);
     createSpinningObstacle(78, 29, -2, 1, 6, 1);
-    
+
     createPlatform(88, 28, 0, 6, 1, 6, 0xffff00);
     createSpinningObstacle(88, 31, 0, 1, 6, 1);
     createSpinningObstacle(90, 31, 2, 1, 6, 1);
-    
+
     createPlatform(96, 30, 0, 4, 1, 4, 0xffff00);
     createSpinningObstacle(96, 33, 0, 1, 6, 1);
-    
+
     // Kill parts below spinners
     createKillPart(80, 25, 0, 20, 1, 10);
 
@@ -656,7 +656,7 @@ function createImpossibleObby() {
         platform.material.transparent = true;
         platform.material.opacity = 0.4; // Make them more visible than before
     }
-    
+
     // Add some visible guide platforms and arrows
     createPlatform(112, 33, 0, 1, 0.1, 1, 0x00ff00); // Guide marker
     createPlatform(115, 33.5, 1, 0.5, 0.1, 0.5, 0x00ff00); // Arrow
@@ -664,7 +664,7 @@ function createImpossibleObby() {
     createPlatform(121, 34.5, 1, 0.5, 0.1, 0.5, 0x00ff00); // Arrow
     createPlatform(124, 35, 0, 0.5, 0.1, 0.5, 0x00ff00); // Arrow
     createPlatform(127, 36, 0, 1, 0.1, 1, 0x00ff00); // Guide marker
-    
+
     createKillPart(112, 30, 0, 20, 1, 15);
 
     createCheckpoint(130, 37, 0, 4, "Invisible Bridge");
@@ -674,7 +674,7 @@ function createImpossibleObby() {
     createPlatform(144, 41, 0, 0.8, 1, 6, 0xff8800);
     createPlatform(150, 43, 0, 0.8, 1, 6, 0xff8800);
     createPlatform(156, 45, 0, 0.8, 1, 6, 0xff8800);
-    
+
     // Kill parts below tightrope
     createKillPart(138, 35, 0, 25, 1, 15);
 
@@ -683,18 +683,18 @@ function createImpossibleObby() {
     // Section 6: Final gauntlet - mixed obstacles
     createPlatform(170, 49, 0, 2, 1, 2, 0xff0000);
     createMovingObstacle(170, 51, 0, 1.5, 1.5, 1.5);
-    
+
     createPlatform(176, 51, 3, 1.5, 1, 1.5, 0xff0000);
     createSpinningObstacle(176, 54, 3, 0.5, 4, 0.5);
-    
+
     createPlatform(182, 53, -3, 1.5, 1, 1.5, 0xff0000);
     createMovingObstacle(182, 55, -3, 1.5, 1.5, 1.5);
-    
+
     createPlatform(188, 55, 0, 2, 1, 2, 0xff0000);
     createSpinningObstacle(188, 58, 0, 0.5, 4, 0.5);
-    
+
     createPlatform(194, 57, 0, 1.5, 1, 1.5, 0xff0000);
-    
+
     // Kill parts below final section
     createKillPart(170, 45, 0, 30, 1, 15);
 
@@ -852,7 +852,7 @@ function updateCamera() {
     // Adjust camera distance based on difficulty for better visibility
     let distance = 8;
     let height = 3;
-    
+
     if (gameMode === 'impossible') {
         distance = 15; // Pull camera back more for impossible obby
         height = 5; // Higher camera for better view
@@ -922,23 +922,23 @@ function animate() {
     if (window.keys['Space'] && onGround && !jumpHeld) {
         const char = obbyCharacters[currentCharacter];
         let jumpBoost = 1;
-        
+
         // Give extra jump power in impossible mode to make it more fair
         if (gameMode === 'impossible') {
             jumpBoost = 1.2;
         }
-        
+
         velocity.y = 0.3 * char.jumpPower * jumpBoost;
         jumpHeld = true;
     }
     if (window.keys['Space'] && jumpHeld && velocity.y > 0) {
         const char = obbyCharacters[currentCharacter];
         let jumpBoost = 1;
-        
+
         if (gameMode === 'impossible') {
             jumpBoost = 1.2;
         }
-        
+
         velocity.y += 0.015 * char.jumpPower * jumpBoost;
     }
     if (!window.keys['Space']) {
@@ -1113,9 +1113,11 @@ function showVictoryScreen() {
     const completedDifficulty = gameMode;
     gameMode = null; // Stop the game loop
 
-    // Check for character unlocks
-    const userData = loadUserData();
+    // Check for character unlocks and get updated user data
     const newUnlocks = checkCharacterUnlocks(completedDifficulty, deaths, true);
+
+    // Load the updated user data after character unlocks
+    const userData = loadUserData();
 
     // Update user stats
     userData.totalDeaths += deaths;
@@ -1126,7 +1128,9 @@ function showVictoryScreen() {
         userData.bestTimes[completedDifficulty] = gameTime;
     }
 
+    // Save the final updated data
     saveUserData(userData);
+    console.log('Victory screen - final user data saved:', userData);
 
     // Create victory overlay
     const victoryDiv = document.createElement('div');
@@ -1197,7 +1201,7 @@ function showVictoryScreen() {
 function checkCharacterUnlocks(difficulty, deaths, completed) {
     const userData = loadUserData();
     let newUnlocks = [];
-    
+
     console.log('Checking character unlocks:', { difficulty, deaths, completed, userData });
 
     if (completed) {

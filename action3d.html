@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>3D Action Game</title>
+    <style>
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); 
+            font-family: 'Gotham', Arial, sans-serif; 
+        }
+        
+        #menu { 
+            position: absolute; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            text-align: center; 
+            z-index: 100; 
+        }
+        
+        #menu h1 { 
+            color: white; 
+            font-size: 48px; 
+            margin-bottom: 30px; 
+            text-shadow: 3px 3px 8px rgba(0,0,0,0.8); 
+            font-weight: bold;
+        }
+        
+        .btn { 
+            padding: 15px 30px; 
+            margin: 10px; 
+            font-size: 24px; 
+            background: linear-gradient(45deg, #FF4444, #FF6666); 
+            color: white; 
+            border: none; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transition: all 0.2s;
+        }
+        
+        .btn:hover { 
+            background: linear-gradient(45deg, #FF6666, #FF8888); 
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+        }
+        
+        #ui { 
+            position: absolute; 
+            top: 10px; 
+            left: 10px; 
+            color: white; 
+            z-index: 100; 
+            display: none; 
+            background: rgba(0,0,0,0.8); 
+            padding: 20px; 
+            border-radius: 15px; 
+            border: 2px solid #FF4444;
+            min-width: 300px;
+        }
+        
+        .ui-stat {
+            margin: 8px 0;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .health-bar, .ammo-bar {
+            width: 200px;
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 5px 0;
+        }
+        
+        .health-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00);
+            transition: width 0.3s;
+        }
+        
+        .ammo-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0066ff, #00aaff);
+            transition: width 0.3s;
+        }
+        
+        #crosshair {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ff0000;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1000;
+            transform: translate(-50%, -50%);
+        }
+        
+        #gameCanvas { 
+            display: none; 
+            cursor: none;
+        }
+        
+        .wave-notification {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 68, 68, 0.9);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 15px;
+            font-size: 32px;
+            font-weight: bold;
+            z-index: 2000;
+            animation: waveNotify 3s ease-out;
+        }
+        
+        @keyframes waveNotify {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+            80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+        }
+    </style>
+</head>
+<body>
+    <div id="menu">
+        <h1>🎯 3D ACTION ARENA 🎯</h1>
+        <div style="background: rgba(0,0,0,0.7); padding: 20px; border-radius: 10px; margin: 20px 0;">
+            <p style="color: #ccc; font-size: 18px; margin: 10px 0;">Enter the ultimate 3D combat arena!</p>
+            <p style="color: #aaa; font-size: 14px;">WASD to move • Mouse to look & aim • Click to shoot • F for ally • C to change character</p>
+        </div>
+        <button class="btn" onclick="startAction()">🚀 START BATTLE</button>
+        <button class="btn" onclick="goHome()">🏠 BACK TO GAMES</button>
+    </div>
+    
+    <div id="ui">
+        <div style="font-size: 20px; font-weight: bold; margin-bottom: 15px; color: #FF4444;">🎯 3D COMBAT ARENA</div>
+        
+        <div class="ui-stat">❤️ Health: <span id="health">100</span>/100</div>
+        <div class="health-bar"><div class="health-fill" id="healthBar" style="width: 100%;"></div></div>
+        
+        <div class="ui-stat">🔫 Ammo: <span id="ammo">∞</span></div>
+        <div class="ammo-bar"><div class="ammo-fill" id="ammoBar" style="width: 100%;"></div></div>
+        
+        <div class="ui-stat">💀 Score: <span id="score">0</span></div>
+        <div class="ui-stat">🌊 Wave: <span id="wave">1</span></div>
+        <div class="ui-stat">👤 Character: <span id="character">Soldier</span></div>
+        <div class="ui-stat">🤖 Allies: <span id="allies">0</span></div>
+        <div class="ui-stat">🔍 Zoom: <span id="zoomLevel">1.0x</span></div>
+        <div class="ui-stat">⚡ Speed: <span id="speedStatus">Normal</span></div>
+        
+        <hr style="margin: 15px 0; border-color: #FF4444;">
+        <div style="font-size: 12px; color: #ccc;">
+            <strong style="color: #ffff00;">CLICK CANVAS TO START!</strong><br>
+            WASD: Move | Mouse: Look/Aim | Click: Shoot<br>
+            <strong style="color: #00ff00;">Scroll Wheel: Zoom | CTRL: Speed Boost</strong><br>
+            SPACE: Jump/Shoot | F: Spawn Ally | C: Change Character
+        </div>
+        
+        <button onclick="goHome()" style="margin-top: 15px; padding: 8px 15px; background: #666; color: white; border: none; border-radius: 5px; cursor: pointer;">🚪 Exit Arena</button>
+    </div>
+    
+    <div id="crosshair"></div>
+    <div id="gameCanvas"></div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="action3d.js"></script>
+</body>
+</html>

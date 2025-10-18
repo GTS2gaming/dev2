@@ -172,6 +172,9 @@
     
     <div style="text-align: center;">
         <button class="back-btn" onclick="goBack()">🏠 Back to Game</button>
+        <button class="back-btn" onclick="refreshData()" style="background: #FF9800;">🔄 Refresh Data</button>
+        <button class="back-btn" onclick="debugData()" style="background: #9C27B0;">🐛 Debug Data</button>
+        <button class="back-btn" onclick="testUnlock()" style="background: #4CAF50;">🧪 Test Unlock</button>
     </div>
     
     <script>
@@ -224,6 +227,10 @@
             const userData = loadUserData();
             const grid = document.getElementById('charactersGrid');
             
+            // Debug logging
+            console.log('Characters page - loaded user data:', userData);
+            console.log('Unlocked characters:', userData.unlockedCharacters);
+            
             // Update user info
             document.getElementById('userWelcome').textContent = `Welcome, ${userData.username}!`;
             document.getElementById('userProgress').textContent = `Completed Obbies: ${userData.completedObbies.length}/3 | Unlocked Characters: ${userData.unlockedCharacters.length}/${obbyCharacters.length}`;
@@ -274,8 +281,45 @@
             window.location.href = 'index.html';
         }
         
+        function refreshData() {
+            console.log('Manual refresh triggered');
+            renderCharacters();
+        }
+        
+        function debugData() {
+            const userData = loadUserData();
+            const rawData = localStorage.getItem('robloxObbyUser');
+            alert(`Raw localStorage data: ${rawData}\n\nParsed data: ${JSON.stringify(userData, null, 2)}`);
+        }
+        
+        function testUnlock() {
+            const userData = loadUserData();
+            // Unlock Bacon Hair for testing
+            if (!userData.unlockedCharacters.includes(1)) {
+                userData.unlockedCharacters.push(1);
+                userData.completedObbies.push('easy');
+                saveUserData(userData);
+                console.log('Test unlock: Added Bacon Hair');
+                renderCharacters();
+            } else {
+                alert('Bacon Hair already unlocked! Current unlocked: ' + userData.unlockedCharacters.join(', '));
+            }
+        }
+        
         // Initialize page
         renderCharacters();
+        
+        // Refresh data when page becomes visible (in case user came from game)
+        window.addEventListener('focus', () => {
+            console.log('Page focused, refreshing character data...');
+            renderCharacters();
+        });
+        
+        // Also refresh when page loads
+        window.addEventListener('pageshow', () => {
+            console.log('Page shown, refreshing character data...');
+            renderCharacters();
+        });
     </script>
 </body>
 </html>
