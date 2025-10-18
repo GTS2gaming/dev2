@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Character Gallery - Roblox Obby</title>
+    <style>
+        body { 
+            margin: 0; 
+            overflow-x: hidden; 
+            background: linear-gradient(135deg, #87CEEB 0%, #98FB98 50%, #FFB6C1 100%); 
+            font-family: 'Gotham', Arial, sans-serif; 
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 48px;
+            text-shadow: 3px 3px 8px rgba(0,0,0,0.8);
+            margin-bottom: 10px;
+        }
+        
+        .user-info {
+            background: rgba(0,0,0,0.7);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #00ff00;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        
+        .characters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .character-card {
+            background: rgba(0,0,0,0.8);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            border: 3px solid #333;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .character-card.unlocked {
+            border-color: #00ff00;
+            box-shadow: 0 0 20px rgba(0,255,0,0.3);
+        }
+        
+        .character-card.locked {
+            border-color: #ff0000;
+            opacity: 0.6;
+        }
+        
+        .character-card:hover.unlocked {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,255,0,0.5);
+        }
+        
+        .character-preview {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 15px;
+            background: #333;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            position: relative;
+        }
+        
+        .character-name {
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .character-stats {
+            color: #ccc;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .unlock-requirement {
+            color: #ff6666;
+            font-size: 12px;
+            font-style: italic;
+        }
+        
+        .unlock-status {
+            color: #66ff66;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .lock-icon {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            color: #ff0000;
+        }
+        
+        .unlock-icon {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            color: #00ff00;
+        }
+        
+        .back-btn {
+            background: linear-gradient(45deg, #00D2FF, #3A7BD5);
+            border: 2px solid #fff;
+            color: white;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 20px;
+            transition: all 0.2s;
+        }
+        
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+        }
+        
+        .select-btn {
+            background: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            font-size: 14px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .select-btn:hover {
+            background: #45a049;
+        }
+        
+        .select-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>👤 CHARACTER GALLERY 👤</h1>
+        <div class="user-info">
+            <div id="userWelcome">Welcome, Player!</div>
+            <div id="userProgress">Progress: Loading...</div>
+        </div>
+    </div>
+    
+    <div class="characters-grid" id="charactersGrid">
+        <!-- Characters will be populated by JavaScript -->
+    </div>
+    
+    <div style="text-align: center;">
+        <button class="back-btn" onclick="goBack()">🏠 Back to Game</button>
+    </div>
+    
+    <script>
+        // Character data (same as in game.js)
+        const obbyCharacters = [
+            { name: 'Noob', headColor: '#ffdbac', torsoColor: '#0066ff', armColor: '#ffdbac', legColor: '#00aa00', speed: 1, jumpPower: 1, hat: null, unlockReq: 'Default character' },
+            { name: 'Bacon Hair', headColor: '#ffdbac', torsoColor: '#654321', armColor: '#ffdbac', legColor: '#654321', speed: 0.9, jumpPower: 0.9, hat: 'bacon', unlockReq: 'Complete Easy Obby' },
+            { name: 'Pro Player', headColor: '#ffdbac', torsoColor: '#000000', armColor: '#ffdbac', legColor: '#000000', speed: 1.2, jumpPower: 1.1, hat: 'cap', unlockReq: 'Complete Easy Obby with <5 deaths' },
+            { name: 'Speedrunner', headColor: '#ffdbac', torsoColor: '#ffff00', armColor: '#ffdbac', legColor: '#ffff00', speed: 1.5, jumpPower: 0.9, hat: 'headphones', unlockReq: 'Complete Hard Obby' },
+            { name: 'Obby Master', headColor: '#ffdbac', torsoColor: '#00ff00', armColor: '#ffdbac', legColor: '#00ff00', speed: 0.9, jumpPower: 1.6, hat: 'crown', unlockReq: 'Complete Hard Obby with <10 deaths' },
+            { name: 'Exploiter', headColor: '#ffdbac', torsoColor: '#ff0000', armColor: '#ffdbac', legColor: '#ff0000', speed: 2, jumpPower: 2, hat: 'fedora', unlockReq: 'Complete Impossible Obby' },
+            { name: 'Guest_12345', headColor: '#ffdbac', torsoColor: '#808080', armColor: '#ffdbac', legColor: '#808080', speed: 0.8, jumpPower: 0.8, hat: null, unlockReq: 'Complete any obby with 0 deaths' },
+            { name: 'Robux Rich', headColor: '#ffdbac', torsoColor: '#ffd700', armColor: '#ffdbac', legColor: '#ffd700', speed: 1.1, jumpPower: 1.2, hat: 'diamond', unlockReq: 'Complete all obbies' }
+        ];
+        
+        function loadUserData() {
+            const userData = JSON.parse(localStorage.getItem('robloxObbyUser') || '{}');
+            return {
+                username: userData.username || 'Guest',
+                unlockedCharacters: userData.unlockedCharacters || [0], // Noob is always unlocked
+                completedObbies: userData.completedObbies || [],
+                bestTimes: userData.bestTimes || {},
+                selectedCharacter: userData.selectedCharacter || 0
+            };
+        }
+        
+        function saveUserData(userData) {
+            localStorage.setItem('robloxObbyUser', JSON.stringify(userData));
+        }
+        
+        function isCharacterUnlocked(index, userData) {
+            return userData.unlockedCharacters.includes(index);
+        }
+        
+        function getCharacterEmoji(character) {
+            const emojiMap = {
+                'Noob': '😊',
+                'Bacon Hair': '🥓',
+                'Pro Player': '😎',
+                'Speedrunner': '⚡',
+                'Obby Master': '👑',
+                'Exploiter': '😈',
+                'Guest_12345': '👻',
+                'Robux Rich': '💎'
+            };
+            return emojiMap[character.name] || '👤';
+        }
+        
+        function renderCharacters() {
+            const userData = loadUserData();
+            const grid = document.getElementById('charactersGrid');
+            
+            // Update user info
+            document.getElementById('userWelcome').textContent = `Welcome, ${userData.username}!`;
+            document.getElementById('userProgress').textContent = `Completed Obbies: ${userData.completedObbies.length}/3 | Unlocked Characters: ${userData.unlockedCharacters.length}/${obbyCharacters.length}`;
+            
+            grid.innerHTML = '';
+            
+            obbyCharacters.forEach((character, index) => {
+                const isUnlocked = isCharacterUnlocked(index, userData);
+                const isSelected = userData.selectedCharacter === index;
+                
+                const card = document.createElement('div');
+                card.className = `character-card ${isUnlocked ? 'unlocked' : 'locked'}`;
+                
+                card.innerHTML = `
+                    <div class="${isUnlocked ? 'unlock-icon' : 'lock-icon'}">
+                        ${isUnlocked ? '✅' : '🔒'}
+                    </div>
+                    <div class="character-preview" style="background: linear-gradient(45deg, ${character.torsoColor}, ${character.legColor});">
+                        ${getCharacterEmoji(character)}
+                    </div>
+                    <div class="character-name">${character.name}</div>
+                    <div class="character-stats">
+                        ⚡ Speed: ${character.speed}x | 🦘 Jump: ${character.jumpPower}x
+                    </div>
+                    ${isUnlocked ? 
+                        `<div class="unlock-status">✅ UNLOCKED</div>
+                         <button class="select-btn" onclick="selectCharacter(${index})" ${isSelected ? 'style="background: #ff9800;"' : ''}>
+                            ${isSelected ? '✅ SELECTED' : 'SELECT'}
+                         </button>` : 
+                        `<div class="unlock-requirement">🔒 ${character.unlockReq}</div>`
+                    }
+                `;
+                
+                grid.appendChild(card);
+            });
+        }
+        
+        function selectCharacter(index) {
+            const userData = loadUserData();
+            if (userData.unlockedCharacters.includes(index)) {
+                userData.selectedCharacter = index;
+                saveUserData(userData);
+                renderCharacters();
+            }
+        }
+        
+        function goBack() {
+            window.location.href = 'index.html';
+        }
+        
+        // Initialize page
+        renderCharacters();
+    </script>
+</body>
+</html>

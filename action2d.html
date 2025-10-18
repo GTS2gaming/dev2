@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>2D Action Game</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; font-family: Arial; }
+        #menu { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 100; }
+        #menu h1 { color: white; font-size: 48px; margin-bottom: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        .btn { padding: 15px 30px; margin: 10px; font-size: 24px; background: #FF4444; color: white; border: none; border-radius: 10px; cursor: pointer; }
+        .btn:hover { background: #FF6666; }
+        #ui { position: absolute; top: 10px; left: 10px; color: white; z-index: 100; display: none; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 10px; }
+        #gameCanvas { display: none; }
+    </style>
+</head>
+<body>
+    <div id="menu">
+        <h1>🔫 2D ACTION GAME 🔫</h1>
+        <button class="btn" onclick="startAction()">START GAME</button>
+        <button class="btn" onclick="goHome()">BACK TO GAMES</button>
+    </div>
+    
+    <div id="ui">
+        <div><strong>🎮 2D ACTION SHOOTER 🎮</strong></div>
+        <div>WASD to move, Mouse to aim, Hold Click to shoot, F to spawn ally, C to change character</div>
+        <div style="margin: 10px 0;">
+            <div>❤️ Health: <span id="health">100</span></div>
+            <div>🔫 Ammo: <span id="ammo">30</span></div>
+            <div>💀 Score: <span id="score">0</span></div>
+            <div>🌊 Wave: <span id="wave">1</span></div>
+        </div>
+        <button onclick="goHome()" style="margin-top: 10px; padding: 5px 10px;">Exit Game</button>
+    </div>
+    
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    
+    <script src="action2d.js"></script>
+</body>
+</html>

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>3D Obby Game</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: linear-gradient(135deg, #87CEEB 0%, #98FB98 50%, #FFB6C1 100%);
+            font-family: 'Gotham', Arial, sans-serif;
+        }
+
+        #menu {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 100;
+        }
+
+        #menu h1 {
+            color: white;
+            font-size: 48px;
+            margin-bottom: 30px;
+            text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.8);
+            font-weight: bold;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            margin: 10px;
+            font-size: 24px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background: #45a049;
+        }
+
+        .btn.hard {
+            background: #f44336;
+        }
+
+        .btn.hard:hover {
+            background: #da190b;
+        }
+
+        .btn.other {
+            background: #9C27B0;
+        }
+
+        .btn.other:hover {
+            background: #7B1FA2;
+        }
+
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            z-index: 100;
+            display: none;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #00ff00;
+        }
+
+        #leaderboard {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: white;
+            z-index: 100;
+            display: none;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #ffd700;
+            min-width: 200px;
+        }
+
+        .ui-stat {
+            margin: 5px 0;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .roblox-btn {
+            background: linear-gradient(45deg, #00D2FF, #3A7BD5);
+            border: 2px solid #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s;
+        }
+
+        .roblox-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        #gameCanvas {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loginMenu" style="display: block;">
+        <h1>🏃‍♂️ ROBLOX OBBY 🏃‍♂️</h1>
+        <div
+            style="background: rgba(0,0,0,0.7); padding: 30px; border-radius: 15px; border: 2px solid #00ff00; margin: 20px auto; max-width: 400px;">
+            <h2 style="color: white; margin-bottom: 20px;">👤 Player Login</h2>
+            <input type="text" id="usernameInput" placeholder="Enter your username..."
+                style="width: 100%; padding: 15px; font-size: 16px; border: 2px solid #00ff00; border-radius: 8px; margin-bottom: 15px; background: rgba(255,255,255,0.9);">
+            <button class="btn roblox-btn" onclick="loginUser()" style="width: 100%; margin: 10px 0;">🚀 START
+                PLAYING</button>
+            <div style="color: #ccc; font-size: 12px; margin-top: 10px;">
+                💡 Your progress will be saved automatically!<br>
+                🔓 Unlock new characters by completing obbies!
+            </div>
+        </div>
+    </div>
+
+    <div id="menu" style="display: none;">
+        <div
+            style="background: rgba(0,0,0,0.7); padding: 20px; border-radius: 10px; border: 2px solid #00ff00; margin-bottom: 20px;">
+            <div id="welcomeMessage" style="color: white; font-size: 18px; margin-bottom: 10px;">Welcome back, Player!
+            </div>
+            <div id="progressInfo" style="color: #ccc; font-size: 14px;">Progress: Loading...</div>
+        </div>
+
+        <h1>🏃‍♂️ ROBLOX OBBY 🏃‍♂️</h1>
+        <button class="btn roblox-btn" onclick="startGame('easy')">🟢 EASY OBBY (Beginner)</button>
+        <button class="btn hard roblox-btn" onclick="startGame('hard')">🔴 MEGA HARD OBBY (Expert)</button>
+        <button class="btn other roblox-btn" onclick="startGame('impossible')">💀 IMPOSSIBLE OBBY (Pro Only)</button>
+        <button class="btn other roblox-btn" onclick="playAction2D()">🔫 2D ACTION GAME</button>
+
+        <div style="margin-top: 30px;">
+            <button class="btn roblox-btn" onclick="openCharacterGallery()"
+                style="background: linear-gradient(45deg, #9C27B0, #E91E63);">👤 CHARACTER GALLERY</button>
+            <button class="btn roblox-btn" onclick="logoutUser()"
+                style="background: linear-gradient(45deg, #FF5722, #F44336); font-size: 16px; padding: 10px 20px;">🚪
+                LOGOUT</button>
+        </div>
+    </div>
+
+    <div id="ui">
+        <div style="font-size: 16px; font-weight: bold; margin-bottom: 10px; color: #00ff00;">🎮 ROBLOX OBBY CONTROLS
+        </div>
+        <div style="font-size: 12px;">🖱️ Click to lock mouse | WASD to move | SPACE to jump</div>
+        <div style="font-size: 12px;">CTRL for speed boost | C to change character | R to respawn</div>
+        <div style="font-size: 12px;">SHIFT to crouch | Q for emote | TAB for leaderboard</div>
+        <hr style="margin: 10px 0; border-color: #00ff00;">
+        <div class="ui-stat" id="speedStatus">⚡ Speed: Normal</div>
+        <div class="ui-stat" id="checkpoint">🚩 Checkpoint: 0/10</div>
+        <div class="ui-stat" id="character">👤 Character: Noob</div>
+        <div class="ui-stat" id="difficulty"></div>
+        <div class="ui-stat" id="deaths">💀 Deaths: 0</div>
+        <div class="ui-stat" id="timer">⏱️ Time: 0:00</div>
+        <div class="ui-stat" id="stage">🏁 Stage: Starting Area</div>
+        <button onclick="goHome()" class="roblox-btn" style="margin-top: 10px; padding: 8px 15px; font-size: 12px;">🏠
+            Leave Game</button>
+    </div>
+
+    <div id="leaderboard">
+        <div style="font-size: 16px; font-weight: bold; margin-bottom: 10px; color: #ffd700; text-align: center;">🏆
+            LEADERBOARD</div>
+        <div id="leaderboardContent">
+            <div style="font-size: 12px; margin: 3px 0;">1. 👑 ProGamer123 - 2:34 (0 deaths)</div>
+            <div style="font-size: 12px; margin: 3px 0;">2. 🥈 SpeedRunner99 - 3:12 (2 deaths)</div>
+            <div style="font-size: 12px; margin: 3px 0;">3. 🥉 ObbyMaster - 4:45 (5 deaths)</div>
+            <div style="font-size: 12px; margin: 3px 0;">4. 🏃 FastBoi - 5:23 (8 deaths)</div>
+            <div style="font-size: 12px; margin: 3px 0;">5. 🎮 Player456 - 6:12 (12 deaths)</div>
+            <hr style="margin: 8px 0; border-color: #ffd700;">
+            <div style="font-size: 12px; margin: 3px 0; color: #00ff00;">→ You: Calculating...</div>
+        </div>
+    </div>
+
+    <div id="gameCanvas"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // User Management System
+        function loadUserData() {
+            const userData = JSON.parse(localStorage.getItem('robloxObbyUser') || '{}');
+            return {
+                username: userData.username || '',
+                unlockedCharacters: userData.unlockedCharacters || [0], // Noob is always unlocked
+                completedObbies: userData.completedObbies || [],
+                bestTimes: userData.bestTimes || {},
+                selectedCharacter: userData.selectedCharacter || 0,
+                totalDeaths: userData.totalDeaths || 0,
+                totalPlayTime: userData.totalPlayTime || 0
+            };
+        }
+
+        function saveUserData(userData) {
+            localStorage.setItem('robloxObbyUser', JSON.stringify(userData));
+        }
+
+        function loginUser() {
+            const username = document.getElementById('usernameInput').value.trim();
+            if (!username) {
+                alert('Please enter a username!');
+                return;
+            }
+
+            if (username.length < 3) {
+                alert('Username must be at least 3 characters long!');
+                return;
+            }
+
+            let userData = loadUserData();
+            userData.username = username;
+            saveUserData(userData);
+
+            showMainMenu();
+        }
+
+        function logoutUser() {
+            document.getElementById('loginMenu').style.display = 'block';
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('usernameInput').value = '';
+        }
+
+        function showMainMenu() {
+            const userData = loadUserData();
+            document.getElementById('loginMenu').style.display = 'none';
+            document.getElementById('menu').style.display = 'block';
+
+            // Update welcome message
+            document.getElementById('welcomeMessage').textContent = `Welcome back, ${userData.username}! 🎮`;
+            document.getElementById('progressInfo').textContent = `Completed: ${userData.completedObbies.length}/3 obbies | Unlocked: ${userData.unlockedCharacters.length}/8 characters`;
+        }
+
+        function openCharacterGallery() {
+            window.location.href = 'characters.html';
+        }
+
+        function checkCharacterUnlocks(difficulty, deaths, completed) {
+            const userData = loadUserData();
+            let newUnlocks = [];
+
+            if (completed) {
+                // Add completed obby to list
+                if (!userData.completedObbies.includes(difficulty)) {
+                    userData.completedObbies.push(difficulty);
+                }
+
+                // Check unlock conditions
+                if (difficulty === 'easy' && !userData.unlockedCharacters.includes(1)) {
+                    userData.unlockedCharacters.push(1); // Bacon Hair
+                    newUnlocks.push('Bacon Hair');
+                }
+
+                if (difficulty === 'easy' && deaths < 5 && !userData.unlockedCharacters.includes(2)) {
+                    userData.unlockedCharacters.push(2); // Pro Player
+                    newUnlocks.push('Pro Player');
+                }
+
+                if (difficulty === 'hard' && !userData.unlockedCharacters.includes(3)) {
+                    userData.unlockedCharacters.push(3); // Speedrunner
+                    newUnlocks.push('Speedrunner');
+                }
+
+                if (difficulty === 'hard' && deaths < 10 && !userData.unlockedCharacters.includes(4)) {
+                    userData.unlockedCharacters.push(4); // Obby Master
+                    newUnlocks.push('Obby Master');
+                }
+
+                if (difficulty === 'impossible' && !userData.unlockedCharacters.includes(5)) {
+                    userData.unlockedCharacters.push(5); // Exploiter
+                    newUnlocks.push('Exploiter');
+                }
+
+                if (deaths === 0 && !userData.unlockedCharacters.includes(6)) {
+                    userData.unlockedCharacters.push(6); // Guest
+                    newUnlocks.push('Guest_12345');
+                }
+
+                if (userData.completedObbies.length >= 3 && !userData.unlockedCharacters.includes(7)) {
+                    userData.unlockedCharacters.push(7); // Robux Rich
+                    newUnlocks.push('Robux Rich');
+                }
+            }
+
+            saveUserData(userData);
+            return newUnlocks;
+        }
+
+        // Check if user is already logged in
+        window.addEventListener('load', () => {
+            const userData = loadUserData();
+            if (userData.username) {
+                showMainMenu();
+            }
+        });
+
+        // Allow Enter key to login
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && document.getElementById('loginMenu').style.display !== 'none') {
+                loginUser();
+            }
+        });
+    </script>
+    <script src="game.js"></script>
+</body>
+
+</html>
