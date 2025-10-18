@@ -243,56 +243,7 @@
             window.location.href = 'characters.html';
         }
 
-        function checkCharacterUnlocks(difficulty, deaths, completed) {
-            const userData = loadUserData();
-            let newUnlocks = [];
 
-            if (completed) {
-                // Add completed obby to list
-                if (!userData.completedObbies.includes(difficulty)) {
-                    userData.completedObbies.push(difficulty);
-                }
-
-                // Check unlock conditions
-                if (difficulty === 'easy' && !userData.unlockedCharacters.includes(1)) {
-                    userData.unlockedCharacters.push(1); // Bacon Hair
-                    newUnlocks.push('Bacon Hair');
-                }
-
-                if (difficulty === 'easy' && deaths < 5 && !userData.unlockedCharacters.includes(2)) {
-                    userData.unlockedCharacters.push(2); // Pro Player
-                    newUnlocks.push('Pro Player');
-                }
-
-                if (difficulty === 'hard' && !userData.unlockedCharacters.includes(3)) {
-                    userData.unlockedCharacters.push(3); // Speedrunner
-                    newUnlocks.push('Speedrunner');
-                }
-
-                if (difficulty === 'hard' && deaths < 10 && !userData.unlockedCharacters.includes(4)) {
-                    userData.unlockedCharacters.push(4); // Obby Master
-                    newUnlocks.push('Obby Master');
-                }
-
-                if (difficulty === 'impossible' && !userData.unlockedCharacters.includes(5)) {
-                    userData.unlockedCharacters.push(5); // Exploiter
-                    newUnlocks.push('Exploiter');
-                }
-
-                if (deaths === 0 && !userData.unlockedCharacters.includes(6)) {
-                    userData.unlockedCharacters.push(6); // Guest
-                    newUnlocks.push('Guest_12345');
-                }
-
-                if (userData.completedObbies.length >= 3 && !userData.unlockedCharacters.includes(7)) {
-                    userData.unlockedCharacters.push(7); // Robux Rich
-                    newUnlocks.push('Robux Rich');
-                }
-            }
-
-            saveUserData(userData);
-            return newUnlocks;
-        }
 
         // Check if user is already logged in
         window.addEventListener('load', () => {

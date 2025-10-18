@@ -1109,20 +1109,21 @@ function animate() {
 }
 
 function showVictoryScreen() {
+    // Store the current difficulty before stopping the game
+    const completedDifficulty = gameMode;
     gameMode = null; // Stop the game loop
 
     // Check for character unlocks
     const userData = loadUserData();
-    const newUnlocks = checkCharacterUnlocks(gameMode, deaths, true);
+    const newUnlocks = checkCharacterUnlocks(completedDifficulty, deaths, true);
 
     // Update user stats
     userData.totalDeaths += deaths;
     userData.totalPlayTime += gameTime;
 
     // Save best time
-    const currentDifficulty = gameMode;
-    if (!userData.bestTimes[currentDifficulty] || gameTime < userData.bestTimes[currentDifficulty]) {
-        userData.bestTimes[currentDifficulty] = gameTime;
+    if (!userData.bestTimes[completedDifficulty] || gameTime < userData.bestTimes[completedDifficulty]) {
+        userData.bestTimes[completedDifficulty] = gameTime;
     }
 
     saveUserData(userData);
@@ -1157,6 +1158,15 @@ function showVictoryScreen() {
                 <div style="font-size: 14px; margin-top: 10px; font-style: italic;">Visit the Character Gallery to select them!</div>
             </div>
         `;
+    } else {
+        // Show debug info when no unlocks
+        unlockText = `
+            <div style="background: rgba(100, 100, 100, 0.7); color: white; padding: 15px; border-radius: 10px; margin: 20px; border: 2px solid #666;">
+                <div style="font-size: 14px;">Debug: Difficulty: ${completedDifficulty}, Deaths: ${deaths}</div>
+                <div style="font-size: 14px;">Unlocked Characters: ${userData.unlockedCharacters.join(', ')}</div>
+                <div style="font-size: 14px;">Completed Obbies: ${userData.completedObbies.join(', ')}</div>
+            </div>
+        `;
     }
 
     victoryDiv.innerHTML = `
@@ -1187,6 +1197,8 @@ function showVictoryScreen() {
 function checkCharacterUnlocks(difficulty, deaths, completed) {
     const userData = loadUserData();
     let newUnlocks = [];
+    
+    console.log('Checking character unlocks:', { difficulty, deaths, completed, userData });
 
     if (completed) {
         // Add completed obby to list
@@ -1232,6 +1244,7 @@ function checkCharacterUnlocks(difficulty, deaths, completed) {
     }
 
     saveUserData(userData);
+    console.log('Character unlock result:', { newUnlocks, updatedUserData: userData });
     return newUnlocks;
 }
 
