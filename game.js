@@ -1029,7 +1029,7 @@ function animate() {
             jumpBoost = 1.1; // Reduced from 1.2
         }
 
-        velocity.y = 0.25 * char.jumpPower * jumpBoost; // Reduced from 0.3
+        velocity.y = 0.28 * char.jumpPower * jumpBoost; // Increased from 0.25 for better jumping
         jumpHeld = true;
         onGround = false; // Immediately set to false to prevent double jumps
         jumpCooldown = 5; // 5 frame cooldown between jumps
@@ -1044,7 +1044,7 @@ function animate() {
         }
 
         // Much smaller boost and only works for a short time
-        velocity.y += 0.008 * char.jumpPower * jumpBoost; // Reduced from 0.015
+        velocity.y += 0.01 * char.jumpPower * jumpBoost; // Increased from 0.008 for better hold-to-jump
     }
     if (!window.keys['Space']) {
         jumpHeld = false;
