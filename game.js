@@ -4,6 +4,7 @@ let scene, camera, renderer;
 let player, platforms = [], obstacles = [], checkpoints = [], killParts = [];
 let velocity = { x: 0, y: 0, z: 0 };
 let onGround = false, currentCheckpoint = 0, jumpHeld = false;
+let jumpCooldown = 0;
 let walkTime = 0, isWalking = false, isJumping = false;
 let mouseX = 0, mouseY = 0, pitch = 0, yaw = 0;
 const sensitivity = 0.002;
@@ -38,7 +39,7 @@ const obbyCharacters = [
     { name: 'Pro Player', headColor: 0xffdbac, torsoColor: 0x000000, armColor: 0xffdbac, legColor: 0x000000, speed: 1.2, jumpPower: 1.1, hat: 'cap' },
     { name: 'Speedrunner', headColor: 0xffdbac, torsoColor: 0xffff00, armColor: 0xffdbac, legColor: 0xffff00, speed: 1.5, jumpPower: 0.9, hat: 'headphones' },
     { name: 'Obby Master', headColor: 0xffdbac, torsoColor: 0x00ff00, armColor: 0xffdbac, legColor: 0x00ff00, speed: 0.9, jumpPower: 1.6, hat: 'crown' },
-    { name: 'Exploiter', headColor: 0xffdbac, torsoColor: 0xff0000, armColor: 0xffdbac, legColor: 0xff0000, speed: 2, jumpPower: 2, hat: 'fedora' },
+    { name: 'Exploiter', headColor: 0xffdbac, torsoColor: 0xff0000, armColor: 0xffdbac, legColor: 0xff0000, speed: 1.8, jumpPower: 1.6, hat: 'fedora' },
     { name: 'Guest_12345', headColor: 0xffdbac, torsoColor: 0x808080, armColor: 0xffdbac, legColor: 0x808080, speed: 0.8, jumpPower: 0.8, hat: null },
     { name: 'Robux Rich', headColor: 0xffdbac, torsoColor: 0xffd700, armColor: 0xffdbac, legColor: 0xffd700, speed: 1.1, jumpPower: 1.2, hat: 'diamond' }
 ];
@@ -563,14 +564,14 @@ function createHardObby() {
     // Checkpoint 3
     createCheckpoint(85, 18, 60, 3, "Spinner Hell");
 
-    // Ultra narrow bridges with kill parts
-    createPlatform(95, 20, 70, 1, 1, 4, 0xff8800);
-    createKillPart(95, 15, 70, 1, 1, 4);
-    createPlatform(100, 22, 75, 1, 1, 4, 0xff8800);
-    createKillPart(100, 17, 75, 1, 1, 4);
-    createPlatform(105, 24, 80, 1, 1, 4, 0xff8800);
-    createKillPart(105, 19, 80, 1, 1, 4);
-    createPlatform(110, 26, 85, 1, 1, 4, 0xff8800);
+    // Ultra narrow bridges with kill parts (made even narrower)
+    createPlatform(95, 20, 70, 0.8, 1, 3, 0xff8800);
+    createKillPart(95, 15, 70, 0.8, 1, 3);
+    createPlatform(100, 22, 75, 0.6, 1, 3, 0xff8800);
+    createKillPart(100, 17, 75, 0.6, 1, 3);
+    createPlatform(105, 24, 80, 0.6, 1, 3, 0xff8800);
+    createKillPart(105, 19, 80, 0.6, 1, 3);
+    createPlatform(110, 26, 85, 0.8, 1, 3, 0xff8800);
 
     // Checkpoint 4
     createCheckpoint(115, 28, 90, 4, "Tightrope Walk");
@@ -598,16 +599,19 @@ function createImpossibleObby() {
     // Starting platform
     createCheckpoint(0, 0, 0, 0, "Starting Area");
 
-    // Section 1: Micro precision jumps (made slightly more forgiving)
-    createPlatform(8, 2, 0, 1.8, 1, 1.8, 0x0066ff);
-    createPlatform(12, 4, 0, 1.5, 1, 1.5, 0x0066ff);
-    createPlatform(16, 6, 0, 1.3, 1, 1.3, 0x0066ff);
-    createPlatform(20, 8, 0, 1.3, 1, 1.3, 0x0066ff);
-    createPlatform(24, 10, 0, 1.5, 1, 1.5, 0x0066ff);
-    createPlatform(28, 12, 0, 1.8, 1, 1.8, 0x0066ff);
+    // Section 1: Micro precision jumps (made harder again)
+    createPlatform(8, 2, 0, 1.2, 1, 1.2, 0x0066ff);
+    createPlatform(12, 4, 0, 1.0, 1, 1.0, 0x0066ff);
+    createPlatform(16, 6, 0, 0.8, 1, 0.8, 0x0066ff);
+    createPlatform(20, 8, 0, 0.8, 1, 0.8, 0x0066ff);
+    createPlatform(24, 10, 0, 1.0, 1, 1.0, 0x0066ff);
+    createPlatform(28, 12, 0, 1.2, 1, 1.2, 0x0066ff);
 
-    // Add safety platform halfway
-    createPlatform(18, 4, -3, 2, 1, 2, 0x888888); // Safety platform
+    // Add moving platform instead of safety platform
+    createPlatform(18, 4, -3, 1.5, 1, 1.5, 0x888888);
+    // Make it a moving platform
+    const movingPlatform = platforms[platforms.length - 1];
+    movingPlatform.userData = { type: 'moving', direction: 1, range: 4, startZ: -3, axis: 'z' };
 
     // Add kill parts below
     createKillPart(8, -5, 0, 25, 1, 15);
@@ -739,36 +743,130 @@ function createSpinningObstacle(x, y, z, w, h, d) {
 }
 
 function createVictoryArea(x, y, z) {
-    // Victory room walls
-    createPlatform(x, y, z, 10, 1, 10, 0x00ffff); // Floor
-    createPlatform(x, y + 5, z - 5, 10, 1, 0.2, 0xffd700); // Back wall
-    createPlatform(x, y + 5, z + 5, 10, 1, 0.2, 0xffd700); // Front wall
-    createPlatform(x - 5, y + 5, z, 0.2, 1, 10, 0xffd700); // Left wall
-    createPlatform(x + 5, y + 5, z, 0.2, 1, 10, 0xffd700); // Right wall
-    createPlatform(x, y + 10, z, 10, 1, 10, 0xffd700); // Ceiling
+    // Victory room with rainbow floor
+    createPlatform(x, y, z, 12, 1, 12, 0x00ffff); // Floor
 
-    // Victory trophy
-    const trophy = new THREE.Mesh(
-        new THREE.ConeGeometry(1, 3, 8),
-        new THREE.MeshLambertMaterial({ color: 0xffd700 })
-    );
-    trophy.position.set(x, y + 3, z);
-    trophy.userData = { type: 'victory' };
-    scene.add(trophy);
+    // Create rainbow walls that change color
+    const walls = [];
+    walls.push(createPlatform(x, y + 5, z - 6, 12, 1, 0.2, 0xff0000)); // Back wall - Red
+    walls.push(createPlatform(x, y + 5, z + 6, 12, 1, 0.2, 0xff8800)); // Front wall - Orange
+    walls.push(createPlatform(x - 6, y + 5, z, 0.2, 1, 12, 0xffff00)); // Left wall - Yellow
+    walls.push(createPlatform(x + 6, y + 5, z, 0.2, 1, 12, 0x00ff00)); // Right wall - Green
+    walls.push(createPlatform(x, y + 10, z, 12, 1, 12, 0x0088ff)); // Ceiling - Blue
 
-    // Spinning victory ring
-    const victoryRing = new THREE.Mesh(
-        new THREE.RingGeometry(3, 4, 16),
-        new THREE.MeshLambertMaterial({ color: 0x00ff00, side: THREE.DoubleSide })
-    );
-    victoryRing.position.set(x, y + 4, z);
-    victoryRing.rotation.x = Math.PI / 2;
-    victoryRing.userData = { type: 'victoryRing' };
-    scene.add(victoryRing);
+    // Floating victory orb with particles
+    const orbGeometry = new THREE.SphereGeometry(1.5, 16, 16);
+    const orbMaterial = new THREE.MeshLambertMaterial({
+        color: 0xffd700,
+        emissive: 0xffaa00,
+        emissiveIntensity: 0.3,
+        transparent: true,
+        opacity: 0.9
+    });
+    const victoryOrb = new THREE.Mesh(orbGeometry, orbMaterial);
+    victoryOrb.position.set(x, y + 6, z);
+    victoryOrb.userData = { type: 'victory', floatTime: 0 };
+    scene.add(victoryOrb);
 
-    // Store victory objects
-    window.victoryTrophy = trophy;
-    window.victoryRing = victoryRing;
+    // Multiple spinning rings around the orb
+    const rings = [];
+    for (let i = 0; i < 5; i++) {
+        const ring = new THREE.Mesh(
+            new THREE.RingGeometry(2 + i * 0.5, 2.3 + i * 0.5, 16),
+            new THREE.MeshLambertMaterial({
+                color: [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff][i],
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.7
+            })
+        );
+        ring.position.set(x, y + 6, z);
+        ring.rotation.x = Math.PI / 2 + (i * 0.2);
+        ring.userData = { type: 'victoryRing', ringIndex: i, rotSpeed: 0.02 + i * 0.01 };
+        scene.add(ring);
+        rings.push(ring);
+    }
+
+    // Victory pillars with flames
+    for (let i = 0; i < 4; i++) {
+        const angle = (i / 4) * Math.PI * 2;
+        const pillarX = x + Math.cos(angle) * 4;
+        const pillarZ = z + Math.sin(angle) * 4;
+
+        // Pillar
+        const pillar = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.3, 0.5, 4, 8),
+            new THREE.MeshLambertMaterial({ color: 0x888888 })
+        );
+        pillar.position.set(pillarX, y + 2, pillarZ);
+        pillar.castShadow = true;
+        scene.add(pillar);
+
+        // Flame on top
+        const flame = new THREE.Mesh(
+            new THREE.ConeGeometry(0.4, 1, 6),
+            new THREE.MeshLambertMaterial({
+                color: 0xff4400,
+                emissive: 0xff2200,
+                emissiveIntensity: 0.5
+            })
+        );
+        flame.position.set(pillarX, y + 4.5, pillarZ);
+        flame.userData = { type: 'flame', flameTime: i * 0.5 };
+        scene.add(flame);
+        rings.push(flame); // Add to rings array for animation
+    }
+
+    // Victory text floating above
+    const textGeometry = new THREE.BoxGeometry(6, 1, 0.2);
+    const textMaterial = new THREE.MeshLambertMaterial({
+        color: 0xffffff,
+        emissive: 0x444444,
+        emissiveIntensity: 0.2
+    });
+    const victoryText = new THREE.Mesh(textGeometry, textMaterial);
+    victoryText.position.set(x, y + 9, z);
+    victoryText.userData = { type: 'victoryText', bobTime: 0 };
+    scene.add(victoryText);
+
+    // Particle system around the orb
+    const particles = [];
+    for (let i = 0; i < 20; i++) {
+        const particle = new THREE.Mesh(
+            new THREE.SphereGeometry(0.1, 4, 4),
+            new THREE.MeshBasicMaterial({
+                color: [0xffd700, 0xff0000, 0x00ff00, 0x0000ff, 0xffff00][i % 5],
+                transparent: true,
+                opacity: 0.8
+            })
+        );
+
+        const angle = (i / 20) * Math.PI * 2;
+        const radius = 3 + Math.random() * 2;
+        particle.position.set(
+            x + Math.cos(angle) * radius,
+            y + 6 + (Math.random() - 0.5) * 2,
+            z + Math.sin(angle) * radius
+        );
+
+        particle.userData = {
+            type: 'victoryParticle',
+            angle: angle,
+            radius: radius,
+            speed: 0.02 + Math.random() * 0.02,
+            bobOffset: Math.random() * Math.PI * 2
+        };
+
+        scene.add(particle);
+        particles.push(particle);
+    }
+
+    // Store victory objects for animation
+    window.victoryTrophy = victoryOrb;
+    window.victoryRings = rings;
+    window.victoryParticles = particles;
+    window.victoryText = victoryText;
+    window.victoryWalls = walls;
 }
 
 function updateUI() {
@@ -919,27 +1017,34 @@ function animate() {
         velocity.z -= right.z * speed;
         isWalking = true;
     }
-    if (window.keys['Space'] && onGround && !jumpHeld) {
+    // Update jump cooldown
+    if (jumpCooldown > 0) jumpCooldown--;
+
+    if (window.keys['Space'] && onGround && !jumpHeld && jumpCooldown <= 0) {
         const char = obbyCharacters[currentCharacter];
         let jumpBoost = 1;
 
         // Give extra jump power in impossible mode to make it more fair
         if (gameMode === 'impossible') {
-            jumpBoost = 1.2;
+            jumpBoost = 1.1; // Reduced from 1.2
         }
 
-        velocity.y = 0.3 * char.jumpPower * jumpBoost;
+        velocity.y = 0.25 * char.jumpPower * jumpBoost; // Reduced from 0.3
         jumpHeld = true;
+        onGround = false; // Immediately set to false to prevent double jumps
+        jumpCooldown = 5; // 5 frame cooldown between jumps
     }
-    if (window.keys['Space'] && jumpHeld && velocity.y > 0) {
+    // Limited hold-to-jump higher (much more restricted)
+    if (window.keys['Space'] && jumpHeld && velocity.y > 0 && velocity.y < 0.1) {
         const char = obbyCharacters[currentCharacter];
         let jumpBoost = 1;
 
         if (gameMode === 'impossible') {
-            jumpBoost = 1.2;
+            jumpBoost = 1.1;
         }
 
-        velocity.y += 0.015 * char.jumpPower * jumpBoost;
+        // Much smaller boost and only works for a short time
+        velocity.y += 0.008 * char.jumpPower * jumpBoost; // Reduced from 0.015
     }
     if (!window.keys['Space']) {
         jumpHeld = false;
@@ -967,7 +1072,7 @@ function animate() {
     // Physics
     velocity.x *= 0.8;
     velocity.z *= 0.8;
-    velocity.y -= 0.02;
+    velocity.y -= 0.025; // Increased gravity from 0.02 to 0.025
 
     const newPos = {
         x: player.position.x + velocity.x,
@@ -1034,7 +1139,22 @@ function animate() {
     // Check victory collision
     if (window.victoryTrophy) {
         const distance = player.position.distanceTo(window.victoryTrophy.position);
+
+        // Victory approach effects
+        if (distance < 8 && distance > 3) {
+            // Make victory orb glow brighter when player approaches
+            window.victoryTrophy.material.emissiveIntensity = 0.3 + (8 - distance) / 8 * 0.4;
+
+            // Make particles move faster
+            if (window.victoryParticles) {
+                window.victoryParticles.forEach(particle => {
+                    particle.userData.speed = 0.02 + (8 - distance) / 8 * 0.05;
+                });
+            }
+        }
+
         if (distance < 3) {
+            // Victory achieved!
             showVictoryScreen();
         }
     }
@@ -1048,6 +1168,23 @@ function animate() {
             }
         } else if (obstacle.userData.type === 'spinning') {
             obstacle.rotation.y += 0.05;
+        }
+    });
+
+    // Update moving platforms
+    platforms.forEach(platform => {
+        if (platform.userData && platform.userData.type === 'moving') {
+            if (platform.userData.axis === 'z') {
+                platform.position.z += platform.userData.direction * 0.05;
+                if (Math.abs(platform.position.z - platform.userData.startZ) > platform.userData.range) {
+                    platform.userData.direction *= -1;
+                }
+            } else {
+                platform.position.x += platform.userData.direction * 0.05;
+                if (Math.abs(platform.position.x - platform.userData.startX) > platform.userData.range) {
+                    platform.userData.direction *= -1;
+                }
+            }
         }
     });
 
@@ -1098,8 +1235,63 @@ function animate() {
         }
     });
 
-    if (window.victoryRing) {
-        window.victoryRing.rotation.z += 0.05;
+    // Animate victory area elements
+    if (window.victoryTrophy) {
+        // Float the victory orb up and down
+        window.victoryTrophy.userData.floatTime += 0.05;
+        window.victoryTrophy.position.y += Math.sin(window.victoryTrophy.userData.floatTime) * 0.02;
+
+        // Rotate the orb
+        window.victoryTrophy.rotation.y += 0.03;
+        window.victoryTrophy.rotation.x += 0.01;
+    }
+
+    if (window.victoryRings) {
+        window.victoryRings.forEach(ring => {
+            if (ring.userData.type === 'victoryRing') {
+                // Each ring rotates at different speeds
+                ring.rotation.z += ring.userData.rotSpeed;
+                ring.rotation.y += ring.userData.rotSpeed * 0.5;
+            } else if (ring.userData.type === 'flame') {
+                // Animate flames
+                ring.userData.flameTime += 0.1;
+                ring.scale.y = 1 + Math.sin(ring.userData.flameTime) * 0.3;
+                ring.rotation.y += 0.05;
+            }
+        });
+    }
+
+    if (window.victoryParticles) {
+        window.victoryParticles.forEach(particle => {
+            // Orbit particles around the victory orb
+            particle.userData.angle += particle.userData.speed;
+            particle.position.x = window.victoryTrophy.position.x + Math.cos(particle.userData.angle) * particle.userData.radius;
+            particle.position.z = window.victoryTrophy.position.z + Math.sin(particle.userData.angle) * particle.userData.radius;
+            particle.position.y = window.victoryTrophy.position.y + Math.sin(particle.userData.angle * 3 + particle.userData.bobOffset) * 0.5;
+
+            // Rotate particles
+            particle.rotation.x += 0.1;
+            particle.rotation.y += 0.1;
+        });
+    }
+
+    if (window.victoryText) {
+        // Bob the victory text
+        window.victoryText.userData.bobTime += 0.03;
+        window.victoryText.position.y += Math.sin(window.victoryText.userData.bobTime) * 0.01;
+        window.victoryText.rotation.y += 0.01;
+    }
+
+    if (window.victoryWalls) {
+        // Cycle wall colors
+        const time = Date.now() * 0.001;
+        window.victoryWalls.forEach((wall, index) => {
+            if (wall && wall.material) {
+                const hue = (time + index * 0.2) % 1;
+                const color = new THREE.Color().setHSL(hue, 0.8, 0.6);
+                wall.material.color = color;
+            }
+        });
     }
 
     // Update timer
