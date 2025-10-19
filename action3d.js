@@ -187,13 +187,15 @@ function createPlayer() {
     head.castShadow = true;
     playerMesh.add(head);
 
-    // Weapon
-    const weaponGeometry = new THREE.BoxGeometry(0.2, 0.2, 1.5);
+    // Weapon (make it more visible for first-person)
+    const weaponGeometry = new THREE.BoxGeometry(0.3, 0.3, 2);
     const weaponMaterial = new THREE.MeshLambertMaterial({ color: 0x333333 });
     const weapon = new THREE.Mesh(weaponGeometry, weaponMaterial);
-    weapon.position.set(0.5, 1.5, -0.5);
+    weapon.position.set(0.8, 0.5, -1); // Position relative to camera
     weapon.castShadow = true;
-    playerMesh.add(weapon);
+
+    // Add weapon directly to camera for first-person view
+    camera.add(weapon);
 
     player = {
         mesh: playerMesh,
@@ -203,9 +205,9 @@ function createPlayer() {
         damage: char.damage
     };
 
-    // Position camera behind player
-    camera.position.set(0, 3, 5);
-    camera.lookAt(0, 1, 0);
+    // Position camera at player eye level (first-person)
+    camera.position.set(0, 2.6, 0);
+    camera.lookAt(0, 2.6, -1);
 }
 
 function setupControls() {
@@ -220,9 +222,10 @@ function setupControls() {
             reload();
         }
 
-        // Speed boost like obby
+        // Speed boost
         if (e.code === 'ControlLeft' || e.code === 'ControlRight') {
             speedMultiplier = 2;
+            updateUI(); // Update speed indicator
         }
     });
 
@@ -232,6 +235,7 @@ function setupControls() {
         // Reset speed boost
         if (e.code === 'ControlLeft' || e.code === 'ControlRight') {
             speedMultiplier = 1;
+            updateUI(); // Update speed indicator
         }
     });
 
@@ -320,97 +324,115 @@ function updatePlayer() {
     if (!player || !gameRunning) return;
 
     const char = characters[currentCharacter];
-    const speed = 0.1 * speedMultiplier * char.speed;
+    const speed = 0.05 * speedMultiplier * char.speed;
 
-    // Calculate forward and right vectors based on camera yaw (like obby)
-    const forward = { x: Math.cos(yaw), z: Math.sin(yaw) };
-    const right = { x: Math.sin(yaw), z: -Math.cos(yaw) };
+    // Calculate movement vectors based on camera direction (where you're looking)
+    const forward = new THREE.Vector3(0, 0, -1);
+    const right = new THREE.Vector3(1, 0, 0);
 
-    // Obby-style movement with velocity
+    // Apply camera rotation to get the actual forward and right directions
+    forward.applyQuaternion(camera.quaternion);
+    right.applyQuaternion(camera.quaternion);
+
+    // Keep movement horizontal (ignore Y component for ground-based movement)
+    forward.y = 0;
+    right.y = 0;
+    forward.normalize();
+    right.normalize();
+
+    // Movement input handling
     isWalking = false;
     if (keys['KeyW']) {
         velocity.x += forward.x * speed;
         velocity.z += forward.z * speed;
         isWalking = true;
+        console.log('W pressed - moving forward', { forward: forward });
     }
     if (keys['KeyS']) {
         velocity.x -= forward.x * speed;
         velocity.z -= forward.z * speed;
         isWalking = true;
+        console.log('S pressed - moving backward', { forward: forward });
     }
     if (keys['KeyA']) {
-        velocity.x += right.x * speed;
-        velocity.z += right.z * speed;
-        isWalking = true;
-    }
-    if (keys['KeyD']) {
         velocity.x -= right.x * speed;
         velocity.z -= right.z * speed;
         isWalking = true;
+        console.log('A pressed - moving left', { right: right });
+    }
+    if (keys['KeyD']) {
+        velocity.x += right.x * speed;
+        velocity.z += right.z * speed;
+        isWalking = true;
+        console.log('D pressed - moving right', { right: right });
     }
 
-    // Jumping (like obby)
+    // Jumping mechanics
     if (keys['Space'] && onGround && !jumpHeld) {
-        velocity.y = 0.3 * char.speed * 0.1; // Jump power based on character speed
+        velocity.y = 0.25; // Fixed jump power
         jumpHeld = true;
+        onGround = false;
     }
     if (keys['Space'] && jumpHeld && velocity.y > 0) {
-        velocity.y += 0.015 * char.speed * 0.1; // Hold jump for higher jump
+        velocity.y += 0.01; // Hold for higher jump
     }
     if (!keys['Space']) {
         jumpHeld = false;
     }
 
-    // Speed boost (like obby CTRL)
-    if (keys['ControlLeft'] || keys['ControlRight']) {
-        speedMultiplier = 2;
-    } else {
-        speedMultiplier = 1;
-    }
-
-    // Walking animations (simplified)
+    // Walking animations
     if (isWalking && onGround) {
-        walkTime += 0.2;
-        // Rotate player mesh slightly for walking effect
-        player.mesh.rotation.z = Math.sin(walkTime) * 0.05;
+        walkTime += 0.15;
+        // Subtle walking animation
+        player.mesh.rotation.z = Math.sin(walkTime) * 0.03;
     } else {
         player.mesh.rotation.z = 0;
     }
 
-    // Physics (like obby)
-    velocity.x *= 0.8; // Friction
-    velocity.z *= 0.8; // Friction
-    velocity.y -= 0.02; // Gravity
+    // Apply physics
+    velocity.x *= 0.88; // Friction (less aggressive)
+    velocity.z *= 0.88; // Friction (less aggressive)
+    velocity.y -= 0.012; // Gravity (slightly less)
 
+    // Calculate new position
     const newPos = {
         x: player.mesh.position.x + velocity.x,
         y: player.mesh.position.y + velocity.y,
         z: player.mesh.position.z + velocity.z
     };
 
-    // Ground collision (simplified - assume ground at y=0)
+    // Ground collision detection
     onGround = false;
-    if (newPos.y <= 1) { // Player height is 2, so center at y=1 means on ground
+    if (newPos.y <= 1) { // Ground level
         newPos.y = 1;
         velocity.y = 0;
         onGround = true;
     }
 
-    // Keep player in arena bounds
+    // Arena bounds
     newPos.x = Math.max(-45, Math.min(45, newPos.x));
     newPos.z = Math.max(-45, Math.min(45, newPos.z));
 
-    // Apply new position
+    // Apply position
     player.mesh.position.set(newPos.x, newPos.y, newPos.z);
 
-    // Rotate player to face movement direction (like obby)
+    // Debug movement (remove this later)
     if (isWalking) {
-        player.mesh.rotation.y = -yaw + Math.PI / 2;
+        console.log('Player moving:', {
+            position: { x: newPos.x, y: newPos.y, z: newPos.z },
+            velocity: velocity,
+            onGround: onGround
+        });
     }
 
-    // Update camera to follow player (first-person style)
+    // Update camera position (first-person)
     camera.position.copy(player.mesh.position);
-    camera.position.y += 1.5; // Eye level
+    camera.position.y += 1.6; // Eye level height
+
+    // Optional: Add slight camera bob when walking
+    if (isWalking && onGround) {
+        camera.position.y += Math.sin(walkTime * 2) * 0.02;
+    }
 }
 
 function shoot() {
